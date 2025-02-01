@@ -269,6 +269,9 @@ async function ReqKoordinaattiMuunnos(lat_in, lon_in, marker) {
 	  xhr.send();
   } else {
 	console.log("Not using proxy");
+	const proxyUrl = 'https://cors-anywhere.herokuapp.com/';  // Käytä cors-anywhere proxy URL:ia
+        //const targetUrl = 'https://hkp.maanmittauslaitos.fi/hkp/action?action_route=Coordinates&lat=59.98070939695573&lon=24.40447331965473&srs=EPSG:4326&targetSRS=EPSG:3067';
+        const url = proxyUrl + url;  
 	const response = await fetch(url);
 	if (!response.ok) {
 		throw new Error(`KoordinaattiMuunnos failed: ${response.statusText}`);
