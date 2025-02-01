@@ -1,0 +1,377 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Korkeus testi</title>
+  
+  <!--   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous" />  -->
+  <!--   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.coordinates@0.1.5/dist/Leaflet.Coordinates-0.1.5.css" integrity="sha256-nzhp5j7BxZkO+IvQtYRCPsG8ebxsg51Qgz1glmRzr34=" crossorigin="anonymous">  -->
+  
+  
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+
+  <!-- Load Leaflet from CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+
+  <!-- Load Esri Leaflet from CDN -->
+  <script src="https://unpkg.com/esri-leaflet@2.4.1/dist/esri-leaflet.js" integrity="sha512-xY2smLIHKirD03vHKDJ2u4pqeHA7OQZZ27EjtqmuhDguxiUvdsOuXMwkg16PQrm9cgTmXtoxA6kwr8KBy3cdcw==" crossorigin=""></script>
+    
+  <!--  <script type='text/javascript' src='https://code.jquery.com/jquery-3.5.1.min.js'></script>   -->
+  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.6.2/proj4.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4leaflet/1.0.2/proj4leaflet.min.js" integrity="sha256-IIb6zlGmoYdKMco2DkshWuX5Oz/d4VSFbOG7x0Zamjo=" crossorigin="anonymous"></script>
+  <script type='text/javascript' src='./SunCalculation.js'></script>
+  <script type='text/javascript' src='./sun.js'></script>
+  <script src="./geometryutil.js"></script>
+  
+  <style>
+    body { margin:0; padding:0; }
+    #map { position: absolute; top:0; bottom:0; right:0; left:0; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script>
+  var MapPos = L.latLng(59.96818660990527, 24.39324453638777)
+  //var map = L.map('map').setView(MapPos, 15);
+
+  var baseUrls = {
+  'Peruskartta': 'https://tiles.kartat.kapsi.fi/peruskartta_3067/{z}/{x}/{y}.jpg',
+  'Taustakartta': 'https://tiles.kartat.kapsi.fi/taustakartta_3067/{z}/{x}/{y}.jpg',
+  'Ortoilmakuva': 'https://tiles.kartat.kapsi.fi/ortokuva_3067/{z}/{x}/{y}.jpg'
+};
+
+var overlayUrls = {
+  'Kiinteistörajat': ['https://tiles.kartat.kapsi.fi/kiinteistorajat_3067/{z}/{x}/{y}.png', {minZoom: 10}],
+  'Kiinteistötunnukset': ['https://tiles.kartat.kapsi.fi/palstatunnus_3067/{z}/{x}/{y}.png', {minZoom: 14}]
+};
+
+var baseMaps = {};
+var overlayMaps = {};
+
+var crs = new L.Proj.CRS('EPSG:3067',
+  '+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs', {
+  resolutions: [8192, 4096, 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1, 0.5, 0.25],
+  origin: [-548576, 8388608],
+  bounds: L.bounds([-548576, 8388608], [1548576, 6291456])
+});
+
+function getOptions(key) {
+  return {
+    detectRetina: true,
+    attribution: key,
+    maxZoom: 15
+  };
+}
+
+Object.keys(baseUrls).forEach(function(key) {
+   baseMaps[key] = L.tileLayer(baseUrls[key], getOptions(key));
+});
+
+Object.keys(overlayUrls).forEach(function(key) {
+   overlayMaps[key] = L.tileLayer(overlayUrls[key][0], Object.assign({}, getOptions(key), overlayUrls[key][1]));
+});
+
+
+var map = new L.Map('map', {
+  crs: crs,
+  layers: [baseMaps['Peruskartta']]
+});
+
+map.setView(MapPos, 10);
+map.attributionControl.setPrefix('Aineisto: Maanmittauslaitos');
+L.control.layers(baseMaps, overlayMaps).addTo(map);
+  //L.esri.basemapLayer('Imagery').addTo(map);
+  //var Peruskartta = L.tileLayer('https://tiles.kartat.kapsi.fi/peruskartta_3067/{z}/{x}/{y}.jpg').addTo(map); 
+  //var opkartta = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  //var tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  //var tileUrl = 'https://tiles.kartat.kapsi.fi/peruskartta_3067/{z}/{x}/{y}.jpg';
+  //var tileAttrib = 'Map data &copy <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'; 
+  //var tiles = new L.tileLayer(tileUrl, {attribution: tileAttrib});
+  //map.addLayer(tiles);
+  
+  
+  L.circle(MapPos, { color: 'blue', fillColor: '#dddddd', fillOpacity: 0.10, radius: 1000 }).addTo(map);  // circle r=1000m
+  var polyline_test = L.polyline([ MapPos, [59.991401, 24.361354] ]).setStyle({color: 'black'}).addTo(map);
+  console.log("Etäisyys=" + parseFloat(MapPos.distanceTo(L.latLng(59.991401, 24.361354))).toFixed(0) + "m");     
+ 
+  function _markerOnClick2(e) { 
+	var tooltip = marker2.getTooltip();
+	console.log(tooltip._content);
+	console.log(e.latlng.toString());
+  };
+
+Date.prototype.addDays = function(days) {
+    var date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+}
+Date.prototype.addMinutes = function(minutes) {
+    var date = new Date(this.valueOf());
+    date.setDate(date.getDate() + minutes/(24*60));
+    return date;
+}
+  //var TimeNow = new Date();
+  var TimeNow = new Date('2023-01-01T12:00:00');
+  var Sun_times_rise = SunCalc.getTimes(TimeNow.addDays(0), MapPos.lat, MapPos.lng);  // sunrise
+  var Sun_times_set = SunCalc.getTimes(TimeNow.addDays(0), MapPos.lat, MapPos.lng);    // sunset 
+  console.log("TimeNow=" + TimeNow);
+  console.log("Sunrise=" + Sun_times_rise.sunrise);
+  console.log("Sunset=" + Sun_times_set.sunset);
+  var Sun_times_riseTest = SunCalc.getTime(TimeNow.addDays(0), MapPos.lat, MapPos.lng, 0, -0.833);  // sunrise  
+  console.log("SunriseTest rise=" + Sun_times_riseTest.sunrise);
+  console.log("SunriseTest set =" + Sun_times_riseTest.sunset);
+  var sunrise = new Date().sunrise(MapPos.lat, MapPos.lng);  
+  var sunset = new Date().sunset(MapPos.lat, MapPos.lng);
+  console.log("Sunrise2=" + sunrise);
+  console.log("Sunset2=" + sunset);
+  var sunrisePos = SunCalc.getPosition(Sun_times_rise.sunrise, MapPos.lat, MapPos.lng);
+  var sunriseAzimuth = sunrisePos.azimuth * 180 / Math.PI + 180;
+  var sunriseAltitude = sunrisePos.altitude * 180 / Math.PI;
+  console.log("SunRise Azi:" +  sunriseAzimuth + " Alt:" + sunriseAltitude);
+  var dest = L.GeometryUtil.destination(MapPos, sunriseAzimuth, 1000);
+  var polyline_rise = L.polyline([MapPos, dest]).setStyle({color: 'yellow'}).addTo(map);
+    var sunsetPos = SunCalc.getPosition(Sun_times_set.sunset, MapPos.lat, MapPos.lng);
+  var sunsetAzimuth = sunsetPos.azimuth * 180 / Math.PI + 180;
+  var sunsetAltitude = sunsetPos.altitude * 180 / Math.PI;
+  console.log("SunSet Azi:" + sunsetAzimuth + " Alt:" + sunsetAltitude);
+  var dest = L.GeometryUtil.destination(MapPos, sunsetAzimuth, 1000);
+  console.log("Dest=" + dest);
+  var polyline_set = L.polyline([MapPos, dest]).setStyle({color: 'yellow'}).addTo(map);
+
+  proj4.defs("EPSG:3067", "+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"); 
+  var sunset_start_Pos = SunCalc.getPosition(Sun_times_set.sunsetStart, MapPos.lat, MapPos.lng);
+  var sunset_start_Azimuth = sunset_start_Pos.azimuth * 180 / Math.PI + 180;
+  console.log("SunSetStart Azi:" + sunset_start_Azimuth);
+  //var Moon_times = SunCalc.getMoonTimes(new Date('2023-01-07T00:00:00'), MapPos.lat, MapPos.lng);
+  var Moon_times = SunCalc.getMoonTimes(new Date(), MapPos.lat, MapPos.lng);
+  console.log("Moonrise=" + Moon_times.rise);  
+  var Moonrise_pos = SunCalc.getMoonPosition(Moon_times.rise, MapPos.lat, MapPos.lng);
+  var moonriseAzimuth = Moonrise_pos.azimuth * 180 / Math.PI + 180;
+  var moonriseAltitude = Moonrise_pos.altitude * 180 / Math.PI;
+  console.log("Moonrise Azimuth=" + moonriseAzimuth + " Altitude=" + moonriseAltitude);
+  console.log("Moonset=" + Moon_times.set); 
+  var Moonset_pos = SunCalc.getMoonPosition(Moon_times.set, MapPos.lat, MapPos.lng);
+  var moonsetAzimuth = Moonset_pos.azimuth * 180 / Math.PI + 180;
+  var moonsetAltitude = Moonset_pos.altitude * 180 / Math.PI;
+  console.log("Moonset Azimuth=" + moonsetAzimuth + " Altitude=" + moonsetAltitude);
+  //var Moon_illum = SunCalc.getMoonIllumination(new Date('2023-01-07T00:00:00'));
+  var Moon_illum = SunCalc.getMoonIllumination(new Date());
+  console.log("Moon illumination=" + (100*Moon_illum.fraction).toFixed(2) + "%");
+  console.log("Moon phase=" + Moon_illum.phase);
+  var myHtml;
+  var Sun_times_rise2 = SunCalc.getTimes(TimeNow.addDays(-0), MapPos.lat, MapPos.lng);  
+  //var sun_rrr = Math.round((Math.abs(Sun_times_rise.sunrise.getTime() - Sun_times_rise2.sunrise.getTime()) - 24*3600*1000) / 2);
+  var sun_rrr = Math.round((Math.abs(Sun_times_rise.sunrise.getTime() - SunCalc.getTimes(TimeNow.addDays(-0), MapPos.lat, MapPos.lng).sunrise.getTime()) - 24*3600*1000) / 2);
+  sun_rrr = new Date(Sun_times_rise.sunrise.getTime() + sun_rrr)
+  console.log("sun_rrr=" + sun_rrr);
+  var DayStart = new Date(TimeNow.getFullYear(), TimeNow.getMonth(), TimeNow.getDate(), 3, 0, 0, 0);
+  var utc_time = DayStart.toISOString().split('.')[0] +"Z";
+  console.log("utc_time=" + utc_time);
+  var SunPos = SunCalc.getPosition(TimeNow.addDays(-1), MapPos.lat, MapPos.lng);
+  var ObjHeight = 100;
+  var MyShadowLength; // = ObjHeight * Math.sin((90-sunsetAltitude)*Math.PI/180)/Math.sin(sunsetAltitude*Math.PI/180);
+  MyShadowLength = ObjHeight / Math.tan(SunPos.altitude);
+  console.log("ObjHeight = " + ObjHeight);
+  console.log("SunPos.altitude = " + (SunPos.altitude * 180 / Math.PI) );
+  console.log("SunPos.azimuth = " + (180 + SunPos.azimuth * 180 / Math.PI) );
+  console.log("MyShadowLength = " + MyShadowLength);
+  
+  var dest;
+  dest = L.GeometryUtil.destination(MapPos,   0, 50000); L.polyline([MapPos, dest]).setStyle({color: 'white', opacity: 0.4}).addTo(map);
+  dest = L.GeometryUtil.destination(MapPos,  90, 50000); L.polyline([MapPos, dest]).setStyle({color: 'white', opacity: 0.4}).addTo(map);
+  dest = L.GeometryUtil.destination(MapPos, 180, 50000); L.polyline([MapPos, dest]).setStyle({color: 'white', opacity: 0.4}).addTo(map);
+  dest = L.GeometryUtil.destination(MapPos, 270, 50000); L.polyline([MapPos, dest]).setStyle({color: 'white', opacity: 0.4}).addTo(map);
+  var aj = proj4('EPSG:3067',[MapPos.lng, MapPos.lat]);
+  console.log("MapPos.lat=" + MapPos.lat + " , MapPos.lng=" + MapPos.lng);
+  var my_lon_kkj = Number(parseFloat(aj[0]).toFixed(9));
+  var my_lat_kkj = Number(parseFloat(aj[1]).toFixed(9));
+  console.log("my_lat_kkj=" + my_lat_kkj.toFixed(2) + "        ,      my_lon_kkj=" + my_lon_kkj.toFixed(2));
+  L.polyline([MapPos, L.latLng(proj4('EPSG:3067', 'WGS84', [my_lon_kkj, my_lat_kkj + 50000])[1], proj4('EPSG:3067', 'WGS84', [my_lon_kkj, my_lat_kkj + 50000])[0])]).setStyle({color: 'green', opacity: 0.4}).addTo(map);
+  L.polyline([MapPos, L.latLng(proj4('EPSG:3067', 'WGS84', [my_lon_kkj + 50000, my_lat_kkj])[1], proj4('EPSG:3067', 'WGS84', [my_lon_kkj + 50000, my_lat_kkj])[0])]).setStyle({color: 'green', opacity: 0.4}).addTo(map);
+  L.polyline([MapPos, L.latLng(proj4('EPSG:3067', 'WGS84', [my_lon_kkj, my_lat_kkj - 50000])[1], proj4('EPSG:3067', 'WGS84', [my_lon_kkj, my_lat_kkj - 50000])[0])]).setStyle({color: 'green', opacity: 0.4}).addTo(map);  
+  L.polyline([MapPos, L.latLng(proj4('EPSG:3067', 'WGS84', [my_lon_kkj - 50000, my_lat_kkj])[1], proj4('EPSG:3067', 'WGS84', [my_lon_kkj - 50000, my_lat_kkj])[0])]).setStyle({color: 'green', opacity: 0.4}).addTo(map);
+  
+  var dest1 = L.GeometryUtil.destination(MapPos,  135, 100); L.polyline([MapPos, dest1]).setStyle({color: 'white', opacity: 0.8}).addTo(map);
+  var dest100m = 100 / Math.sqrt(2);
+  var dest2 = L.latLng(proj4('EPSG:3067', 'WGS84', [my_lon_kkj + dest100m, my_lat_kkj - dest100m])[1], proj4('EPSG:3067', 'WGS84', [my_lon_kkj + dest100m, my_lat_kkj - dest100m])[0]);
+  L.polyline([MapPos, dest2]).setStyle({color: 'green', opacity: 0.8}).addTo(map);
+  console.log("Etäisyys100m=" + parseFloat(dest1.distanceTo(dest2)).toFixed(0) + "m");
+  
+  dest1 = L.GeometryUtil.destination(MapPos,  225, 1000); L.polyline([MapPos, dest1]).setStyle({color: 'white', opacity: 0.8}).addTo(map);
+  var dest1km = 1000 / Math.sqrt(2);
+  dest2 = L.latLng(proj4('EPSG:3067', 'WGS84', [my_lon_kkj - dest1km, my_lat_kkj - dest1km])[1], proj4('EPSG:3067', 'WGS84', [my_lon_kkj - dest1km, my_lat_kkj - dest1km])[0]);
+  L.polyline([MapPos, dest2]).setStyle({color: 'green', opacity: 0.8}).addTo(map);
+  console.log("Etäisyys1km=" + parseFloat(dest1.distanceTo(dest2)).toFixed(0) + "m");
+  
+  dest1 = L.GeometryUtil.destination(MapPos,  315, 5000); L.polyline([MapPos, dest1]).setStyle({color: 'white', opacity: 0.8}).addTo(map);
+  dest5km = 5000 / Math.sqrt(2);
+  dest2 = L.latLng(proj4('EPSG:3067', 'WGS84', [my_lon_kkj - dest5km, my_lat_kkj + dest5km])[1], proj4('EPSG:3067', 'WGS84', [my_lon_kkj - dest5km, my_lat_kkj + dest5km])[0]);
+  L.polyline([MapPos, dest2]).setStyle({color: 'green', opacity: 0.8}).addTo(map);
+  console.log("Etäisyys5km=" + parseFloat(dest1.distanceTo(dest2)).toFixed(0) + "m");
+  
+  dest1 = L.GeometryUtil.destination(MapPos,  45, 50000); L.polyline([MapPos, dest1]).setStyle({color: 'white', opacity: 0.8}).addTo(map);
+  var dest50km = 50000 / Math.sqrt(2);
+  dest2 = L.latLng(proj4('EPSG:3067', 'WGS84', [my_lon_kkj + dest50km, my_lat_kkj + dest50km])[1], proj4('EPSG:3067', 'WGS84', [my_lon_kkj + dest50km, my_lat_kkj + dest50km])[0]);
+  L.polyline([MapPos, dest2]).setStyle({color: 'green', opacity: 0.8}).addTo(map);
+  console.log("Etäisyys50km=" + parseFloat(dest1.distanceTo(dest2)).toFixed(0) + "m");
+ 
+  var lat_kkj, lon_kkj, Obs_height;
+
+async function ReqKoordinaattiMuunnos(lat_in, lon_in, marker) {  
+  if (!lat_in) { lat_in = MapPos.lat }
+  if (!lon_in) { lon_in = MapPos.lng }
+  url = "https://hkp.maanmittauslaitos.fi/hkp/action?action_route=Coordinates&lat=" + lat_in + "&lon=" + lon_in + "&srs=EPSG:4326&targetSRS=EPSG:3067";
+  console.log("url=" + url);
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "1") {  // Käytä proxyä vain localhost:ssa
+	  console.log("Using proxy");
+	  var xhr= new XMLHttpRequest();  
+	  xhr.open('GET', "http://localhost:8173/", true);
+	  //xhr.open('GET', "https://cors-anywhere.herokuapp.com/" + url, true);
+	  xhr.setRequestHeader('RequestMethod', 'GET');  
+	  xhr.setRequestHeader('RequestDest', url);  
+	  xhr.onreadystatechange= function() {
+		if (this.readyState!==4) return;
+		if (this.status!==200) return;
+		myHtml= this.responseText;
+		console.log("resp=" + myHtml);
+		var stx = '"lon":';
+		var istx = myHtml.indexOf(stx);
+		var lon_txt = myHtml.substr(istx + stx.length, 18);
+		var stx = '"lat":';
+		var istx = myHtml.indexOf(stx);
+		var lat_txt = myHtml.substr(istx + stx.length, 18);
+		var lon = parseFloat(lon_txt).toFixed(0);
+		var lat = parseFloat(lat_txt).toFixed(0);
+		console.log("lat_txt=" + lat_txt + " lon_txt=" + lon_txt);
+		console.log("kkj lat=" + lat + " lon=" + lon);
+		proj4.defs([
+		  ['EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs'],
+		  ['EPSG:3067', '+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs']
+		]);
+		// Coordinates in WGS84
+		var wgs84Coord = [lon_in, lat_in];
+		// Convert to ETRS-TM35FIN
+		var etrsCoord = proj4('EPSG:4326', 'EPSG:3067', wgs84Coord);
+		console.log('ETRS-TM35FIN Coordinates:', etrsCoord);
+
+		lat_kkj = lat;
+		lon_kkj = lon;
+		var aj = proj4('EPSG:3067',[1*lon_in, 1*lat_in]);
+		console.log("lat_in=" + lat_in + " , lon_in=" + lon_in);
+		console.log("aj=" + aj);
+		var ak = proj4('EPSG:3067', 'EPSG:4326', [aj[0], aj[1]]);
+		console.log("ak=" + ak);
+		if (marker) { ReqKorkeus(lat_in, lon_in, marker); }
+		else { ReqKorkeus(); }
+	  };
+	  xhr.send();
+  } else {
+	console.log("Not using proxy");
+	const proxyUrl = 'https://petehuu.github.io/Esri-proxy';
+	const url = `${proxyUrl}/hkp/action?action_route=Coordinates&lat=${lat_in}&lon=${lon_in}&srs=EPSG:4326&targetSRS=EPSG:3067`;
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`KoordinaattiMuunnos failed: ${response.statusText}`);
+	}
+	myHtml= await response.text();
+	console.log("resp=" + myHtml);
+	var stx = '"lon":';
+	var istx = myHtml.indexOf(stx);
+	var lon_txt = myHtml.substr(istx + stx.length, 18);
+	var stx = '"lat":';
+	var istx = myHtml.indexOf(stx);
+	var lat_txt = myHtml.substr(istx + stx.length, 18);
+	var lon = parseFloat(lon_txt).toFixed(0);
+	var lat = parseFloat(lat_txt).toFixed(0);
+	console.log("lat_txt=" + lat_txt + " lon_txt=" + lon_txt);
+	console.log("kkj lat=" + lat + " lon=" + lon);
+	lat_kkj = lat;
+	lon_kkj = lon;
+	if (marker) { ReqKorkeus(lat_in, lon_in, marker); }
+	else { ReqKorkeus(); }
+  }
+}
+
+async function ReqKorkeus(lat_in, lon_in, marker) {
+  //var lat_area2 = Number(lat_kkj) + 4;	
+  //var lon_area2 = Number(lon_kkj) + 4;
+  //var lat_area = lat_kkj-- + "," + lat_area2;
+  //var lon_area = lon_kkj-- + "," + lon_area2;
+  var lat_area = (Number(lat_kkj) - 0).toString() + "," + (Number(lat_kkj) + 4).toString();
+  var lon_area = (Number(lon_kkj) - 0).toString() + "," + (Number(lon_kkj) + 4).toString();  
+  
+  //url = "https://beta-karttakuva.maanmittauslaitos.fi/wcs/service/ows?service=WCS&version=2.0.1&request=GetCoverage&CoverageID=korkeusmalli_2m&SUBSET=E(" + lon_area + ")&SUBSET=N(" + lat_area + ")&format=text/plain";
+  url = "https://avoin-karttakuva.maanmittauslaitos.fi/ortokuvat-ja-korkeusmallit/wcs/v2?api-key=7cd2ddae-9f2e-481c-99d0-404e7bc7a0b2&service=WCS&version=2.0.1&request=GetCoverage&CoverageID=korkeusmalli_2m&SUBSET=E(" + lon_area + ")&SUBSET=N(" + lat_area + ")&format=text/plain";
+ 
+  console.log("url=" + url);
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "") {  // Käytä proxyä vain localhost:ssa
+	  console.log("Using proxy");
+	  var xhr= new XMLHttpRequest();
+	  xhr.open('GET', "http://localhost:8173/", true);
+	  xhr.setRequestHeader('RequestMethod', 'GET');  
+	  xhr.setRequestHeader('RequestDest', url);  
+	  xhr.onreadystatechange= function() {
+		if (this.readyState!==4) return;
+		if (this.status!==200) return;
+		myHtml= this.responseText;
+		console.log("resp=" + myHtml);
+		var lines = myHtml.split("\n");
+		var height = parseFloat(lines[6]).toFixed(2);
+		Obs_height = height;
+		console.log("korkeus=" + height + "m");
+		if (marker) { marker.setTooltipContent("Lat=" + lat_in.toFixed(3) + ", Lon=" + lon_in.toFixed(3) + ", korkeus=" + height + "m<br>Kkj N=" + lat_kkj + ", E=" + lon_kkj); }
+	  };
+	  xhr.send();
+   } else {
+		console.log("Not using proxy");
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`Elevation API request failed: ${response.statusText}`);
+		}
+		myHtml= await response.text();
+		console.log("resp=" + myHtml);
+		const lines = myHtml.split("\n");
+		const height = parseFloat(lines[6]).toFixed(2);
+		Obs_height = height;
+		console.log("korkeus=" + height + "m");
+		if (marker) { marker.setTooltipContent("Lat=" + lat_in.toFixed(3) + ", Lon=" + lon_in.toFixed(3) + ", korkeus=" + height + "m<br>Kkj N=" + lat_kkj + ", E=" + lon_kkj); }
+   }
+}
+
+       	
+  //console.log("Html=" + myHtml);
+  /*var lat, lng;
+  map.addEventListener('mousemove', function(ev) {
+   lat = ev.latlng.lat;
+   lng = ev.latlng.lng;
+  });
+  document.getElementById("map").addEventListener("contextmenu", function (event) {
+    event.preventDefault();
+    alert(lat + ' , ' + lng);
+    return false; // To disable default popup.
+  }); */
+  //map.on("contextmenu", function (event) { console.log("Coordinates: " + event.latlng.toString());  L.marker(event.latlng).addTo(map);  });
+  //map.addEventListener('click', function(ev) {var m = L.marker(ev.latlng).addTo(map); });
+  var newMarker, nmLat, nmLon, evLat, evLon;
+  var mapMarkers = [];
+    map.addEventListener('click', function(ev) {
+		if (ev.originalEvent.ctrlKey) { console.log("ctrl pressed"); for(var i = 0; i < mapMarkers.length; i++){ map.removeLayer(mapMarkers[i]); }; return; }
+		newMarker = L.marker(ev.latlng).addTo(map); 
+		newMarker.bindTooltip(ev.latlng.toString(), { permanent: true } ); 
+		ReqKoordinaattiMuunnos(ev.latlng.lat, ev.latlng.lng, newMarker);		
+		console.log("Marker lisätty");
+		mapMarkers.push(newMarker);
+  });
+
+  
+</script>
+
+<!--  
+  <circle cx="485.5" cy="485.5" r="475.5" fill="none" stroke="#000000" style="stroke-opacity: 0.5;" stroke-opacity="0.5" stroke-width="1"><title></title></circle>
+-->  
+
+
+</body>
+</html>
