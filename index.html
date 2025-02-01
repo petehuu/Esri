@@ -225,7 +225,7 @@ async function ReqKoordinaattiMuunnos(lat_in, lon_in, marker) {
   url = "https://hkp.maanmittauslaitos.fi/hkp/action?action_route=Coordinates&lat=" + lat_in + "&lon=" + lon_in + "&srs=EPSG:4326&targetSRS=EPSG:3067";
   console.log("url=" + url);
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "") {  // Käytä proxyä vain localhost:ssa
-	  console.log("Using proxy");
+	  console.log("Local host : Using proxy");
 	  var xhr= new XMLHttpRequest();  
 	  xhr.open('GET', "http://localhost:8173/", true);
 	  //xhr.open('GET', "https://cors-anywhere.herokuapp.com/" + url, true);
@@ -268,10 +268,11 @@ async function ReqKoordinaattiMuunnos(lat_in, lon_in, marker) {
 	  };
 	  xhr.send();
   } else {
-	console.log("Not using proxy");
+	console.log("Not local host : Using proxy" );
 	const proxyUrl = 'https://cors-anywhere.herokuapp.com/';  // Käytä cors-anywhere proxy URL:ia
-        const targetUrl = url;
-        url = proxyUrl + targetUrl;  
+	console.log("Proxy : " + proxyUrl);
+    const targetUrl = url;
+    url = proxyUrl + targetUrl;
 	const response = await fetch(url);
 	if (!response.ok) {
 		throw new Error(`KoordinaattiMuunnos failed: ${response.statusText}`);
