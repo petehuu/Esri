@@ -67,7 +67,7 @@ function getOptions(key) {
 
 Object.keys(baseUrls).forEach(function(key) {
    baseMaps[key] = L.tileLayer(baseUrls[key], getOptions(key));
-});
+}); 
 
 Object.keys(overlayUrls).forEach(function(key) {
    overlayMaps[key] = L.tileLayer(overlayUrls[key][0], Object.assign({}, getOptions(key), overlayUrls[key][1]));
